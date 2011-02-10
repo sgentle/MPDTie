@@ -1,0 +1,13 @@
+spec = Gem::Specification.new do |s|
+  s.name = 'mpdtie'
+  s.version = '0.1'
+  s.summary = 'MPD bowtie controller'
+  s.require_path = '.'
+  s.files = ['mpdtie', 'rbowtie.rb']
+
+
+  s.add_dependency('librmpd', '>= 0.1.1')
+  s.add_dependency('plist', '>= 3.1.0')
+  s.add_dependency('dnssd', '>= 1.4')
+  s.add_dependency('uuid', '>= 2.3.1')
+end

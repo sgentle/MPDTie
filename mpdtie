@@ -1,13 +1,89 @@
 #!/usr/bin/env ruby
 
+require 'rubygems'
 require_relative './rbowtie'
+require 'librmpd'
 
-bow = Bowtie.new("f2170d25cdbae1e8eb242569f444a61596e954fd")
+mpd = MPD.new 'localhost', 6600
 
-bow.command_callback do |command|
-	puts "command: #{command}"
+class MPDEvents
+	def state_callback(state)
+		case state
+			when 'play'
+				Bowtie.all.update_playstate('playing')
+			when 'pause'
+				Bowtie.all.update_playstate('paused')
+			when 'stop'
+				Bowtie.all.update_playstate('paused')
+
+		end
+		puts "State: " + state
+	end
+	def song_callback(song)
+		puts "New Song: [#{song.album}] #{song.artist} - #{song.title}" if song
+		Bowtie.each_bowtie do |bowtie|
+			update_song(bowtie, song)
+			bowtie.update_track
+		end
+	end
 end
 
-bow.connect("192.168.0.51")
+events = MPDEvents.new
 
-bow.wait_on_commands
+mpd.register_callback(events.method('state_callback'), MPD::STATE_CALLBACK)
+mpd.register_callback(events.method('song_callback'), MPD::CURRENT_SONG_CALLBACK)
+
+mpd.connect(true)
+
+#bow = Bowtie.new("f2170d25cdbae1e8eb242569f444a61596e954fd")
+
+Bowtie.connect_all
+
+def update_song(bow, song)
+	if song
+		bow.info = {
+			'artist' => song.artist,
+			'album' => song.album,
+			'title' => song.title,
+			'genre' => song.genre,
+			'length' => song.time
+			#artwork => some data (base64 or uuencode?)
+		}
+	else
+		bow.info = {
+		}
+		
+	end
+	bow.player_position = 1.0
+end
+
+Bowtie.connect_callback do |newtie|
+	newtie.command_callback do |bow, command|
+		case command
+			when 'previous'
+				mpd.previous
+			when 'next'
+				mpd.next
+			when 'playPause'
+				if mpd.playing?
+					mpd.pause = true
+					puts "paused"
+				else
+					puts "playing"
+					mpd.play
+				end
+		end
+		puts "command: #{command}"
+	end
+
+	newtie.info_callback do |bow, command|
+		update_song(bow, mpd.current_song)
+
+		bow.player_position = 1.0
+	end
+end
+
+sleep
+
+trap 'INT' do Bowtie.all.disconnect; exit end
+trap 'TERM' do Bowtie.all.disconnect; exit end
