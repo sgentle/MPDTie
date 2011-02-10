@@ -1,0 +1,13 @@
+#!/usr/bin/env ruby
+
+require_relative './rbowtie'
+
+bow = Bowtie.new("f2170d25cdbae1e8eb242569f444a61596e954fd")
+
+bow.command_callback do |command|
+	puts "command: #{command}"
+end
+
+bow.connect("192.168.0.51")
+
+bow.wait_on_commands
