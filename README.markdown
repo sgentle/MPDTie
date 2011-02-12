@@ -15,6 +15,7 @@ Ruby (tested on 1.9, should work fine on 1.8 too)
 
 Required Ruby modules are pecified in the Gemfile - use
 > $ bundle install
+
 to install them.
 
 MPDTie relies on libdnssd, which is installed by default on OS X. On Linux, you'll need to install the avahi compatibility layer (the Ubuntu/Debian magic words are: apt-get install libavahi-compat-libdnssd-dev). More information in the [ruby dnssd docs](http://dnssd.rubyforge.org/dnssd/).
